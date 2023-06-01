@@ -1,17 +1,17 @@
-Thu Jun  1 13:06:37 UTC 2023
+Thu Jun  1 13:11:23 UTC 2023
 GAg: 
 Test passed, 1000 out of 1000 assertions passed
 
 GAp: 
-Exception in thread "main" hardwar.branch.prediction.judge.TestFailedException: Test failed, 287 out of 1000 assertions passed
-	at hardwar.branch.prediction.judge.Judge.main(Judge.java:39)
+Test passed, 1000 out of 1000 assertions passed
+
 GAs: 
 Exception in thread "main" hardwar.branch.prediction.judge.TestFailedException: Test failed, 203 out of 1000 assertions passed
 	at hardwar.branch.prediction.judge.Judge.main(Judge.java:39)
 Exception in thread "main" java.lang.NullPointerException
 	at java.base/java.lang.System.arraycopy(Native Method)
 	at hardwar.branch.prediction.shared.devices.SIPORegister.load(SIPORegister.java:65)
-	at hardwar.branch.prediction.judged.PAg.PAg.predict(PAg.java:43)
+	at hardwar.branch.prediction.judged.PAg.PAg.predict(PAg.java:44)
 	at hardwar.branch.prediction.judge.PredictorSimulator.lambda$simulate$0(PredictorSimulator.java:27)
 	at java.base/java.util.stream.IntPipeline$1$1.accept(IntPipeline.java:180)
 	at java.base/java.util.stream.Streams$RangeIntSpliterator.forEachRemaining(Streams.java:104)
