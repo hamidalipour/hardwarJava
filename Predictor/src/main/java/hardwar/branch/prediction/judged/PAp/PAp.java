@@ -46,8 +46,8 @@ public class PAp implements BranchPredictor {
     @Override
     public BranchResult predict(BranchInstruction branchInstruction) {
         ShiftRegister BHR = PABHR.read(branchInstruction.getInstructionAddress());
-        PAPHT.putIfAbsent(getCacheEntry(branchInstruction.getInstructionAddress()),zeros);
-        SC.load(PAPHT.get(getCacheEntry(branchInstruction.getInstructionAddress())));
+        PAPHT.putIfAbsent(getCacheEntry(branchInstruction.getInstructionAddress(),BHR.read()),zeros);
+        SC.load(PAPHT.get(getCacheEntry(branchInstruction.getInstructionAddress(), BHR.read())));
         if(Bit.toNumber(SC.read()) > (int) Math.pow(2.0 , SC.getLength() - 1) - 1){
             return BranchResult.TAKEN;
         }
@@ -57,13 +57,13 @@ public class PAp implements BranchPredictor {
     @Override
     public void update(BranchInstruction instruction, BranchResult actual) {
         ShiftRegister BHR = PABHR.read(instruction.getInstructionAddress());
-        SC.load(PAPHT.get(getCacheEntry(instruction.getInstructionAddress())));
+        SC.load(PAPHT.get(getCacheEntry(instruction.getInstructionAddress(), BHR.read())));
         if(BranchResult.isTaken(actual)){
-            PAPHT.put(getCacheEntry(instruction.getInstructionAddress()),CombinationalLogic.count(SC.read(),true,CountMode.SATURATING));
+            PAPHT.put(getCacheEntry(instruction.getInstructionAddress(), BHR.read()),CombinationalLogic.count(SC.read(),true,CountMode.SATURATING));
             BHR.insert(Bit.ONE);
 
         }else {
-            PAPHT.put(getCacheEntry(instruction.getInstructionAddress()),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
+            PAPHT.put(getCacheEntry(instruction.getInstructionAddress(), BHR.read()),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
             BHR.insert(Bit.ZERO);
         }
     }
