@@ -10,6 +10,7 @@ public class GAp implements BranchPredictor {
     private final ShiftRegister SC; // saturating counter register
     private final ShiftRegister BHR; // branch history register
     private final Cache<Bit[], Bit[]> PAPHT; // Per Address History Table
+    private final Bit[] zeros;
 
     public GAp() {
         this(4, 2, 8);
@@ -25,17 +26,21 @@ public class GAp implements BranchPredictor {
      */
     public GAp(int BHRSize, int SCSize, int branchInstructionSize) {
         // TODO: complete the constructor
-        this.branchInstructionSize = 0;
+        zeros = new Bit[SCSize];
+        for (int i = 0; i < SCSize; i++) {
+            zeros[i] = Bit.ZERO;
+        }
+        this.branchInstructionSize = branchInstructionSize;
 
         // Initialize the BHR register with the given size and no default value
-        this.BHR = null;
+        this.BHR =  new SIPORegister("BHR",BHRSize,null);
 
         // Initializing the PAPHT with BranchInstructionSize as PHT Selector and 2^BHRSize row as each PHT entries
         // number and SCSize as block size
-        PAPHT = null;
+        PAPHT = new PageHistoryTable(((int)Math.pow(2.0,(double)(BHRSize+branchInstructionSize))),SCSize);
 
         // Initialize the SC register
-        SC = null;
+        SC = new SIPORegister("SC",SCSize,null);
     }
 
     /**
@@ -46,7 +51,12 @@ public class GAp implements BranchPredictor {
      */
     @Override
     public BranchResult predict(BranchInstruction branchInstruction) {
-        // TODO: complete Task 1
+        branchInstruction.getInstructionAddress();
+        PAPHT.putIfAbsent(BHR.read(),zeros);
+        SC.load(PAPHT.get(BHR.read()));
+        if(Bit.toNumber(SC.read())>=2){
+            return BranchResult.TAKEN;
+        }
         return BranchResult.NOT_TAKEN;
     }
 
