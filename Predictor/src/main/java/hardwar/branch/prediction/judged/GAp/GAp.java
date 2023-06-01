@@ -2,8 +2,10 @@ package hardwar.branch.prediction.judged.GAp;
 
 import hardwar.branch.prediction.shared.*;
 import hardwar.branch.prediction.shared.devices.*;
+import java.lang.Math;
 
-import java.util.Arrays;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class GAp implements BranchPredictor {
     private final int branchInstructionSize;
@@ -51,10 +53,11 @@ public class GAp implements BranchPredictor {
      */
     @Override
     public BranchResult predict(BranchInstruction branchInstruction) {
-        branchInstruction.getInstructionAddress();
-        PAPHT.putIfAbsent(BHR.read(),zeros);
-        SC.load(PAPHT.get(BHR.read()));
-        if(Bit.toNumber(SC.read())>=2){
+
+
+        PAPHT.putIfAbsent(getCacheEntry(branchInstruction.getInstructionAddress());,zeros);
+        SC.load(PAPHT.get(getCacheEntry(branchInstruction.getInstructionAddress());));
+        if(Bit.toNumber(SC.read()) > (int) Math.pow(2.0 , SC.getLength() - 1) - 1){
             return BranchResult.TAKEN;
         }
         return BranchResult.NOT_TAKEN;
@@ -69,6 +72,15 @@ public class GAp implements BranchPredictor {
     @Override
     public void update(BranchInstruction branchInstruction, BranchResult actual) {
         // TODO : complete Task 2
+        SC.load(PAPHT.get(getCacheEntry(branchInstruction.getInstructionAddress())));
+        if(BranchResult.isTaken(actual)){
+            PAPHT.put(getCacheEntry(branchInstruction.getInstructionAddress()),CombinationalLogic.count(SC.read(),true,CountMode.SATURATING));
+            BHR.insert(Bit.ONE);
+
+        }else {
+            PAPHT.put(getCacheEntry(branchInstruction.getInstructionAddress()),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
+            BHR.insert(Bit.ZERO);
+        }
     }
 
 
