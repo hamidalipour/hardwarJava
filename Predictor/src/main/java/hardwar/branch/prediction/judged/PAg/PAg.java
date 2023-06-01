@@ -40,7 +40,8 @@ public class PAg implements BranchPredictor {
     @Override
     public BranchResult predict(BranchInstruction instruction) {
         // TODO : complete Task 1
-        SC.load(PHT.get(PABHR.read(instruction.getInstructionAddress()).read()));
+        ShiftRegister BHR = PABHR.read(instruction.getInstructionAddress());
+        SC.load(PHT.get(BHR.read()));
         if(Bit.toNumber(SC.read())>=2){
             return BranchResult.TAKEN;
         }
