@@ -14,6 +14,8 @@ public class PAs implements BranchPredictor {
     private final ShiftRegister SC; // saturating counter register
     private final RegisterBank PABHR; // per address Branch History Register
     private final Cache<Bit[], Bit[]> PSPHT; // Per Set Predication History Table
+    private final Bit[] zeros;
+
 
     public PAs() {
         this(4, 2, 8, 4, HashMode.XOR);
@@ -21,19 +23,25 @@ public class PAs implements BranchPredictor {
 
     public PAs(int BHRSize, int SCSize, int branchInstructionSize, int KSize, HashMode hashMode) {
         // TODO: complete the constructor
-        this.branchInstructionSize = 0;
-        this.KSize = 0;
+        this.branchInstructionSize = branchInstructionSize;
+        this.KSize = KSize;
         this.hashMode = HashMode.XOR;
 
         // Initialize the PABHR with the given bhr and branch instruction size
-        PABHR = null;
 
         // Initializing the PAPHT with K bit as PHT selector and 2^BHRSize row as each PHT entries
         // number and SCSize as block size
-        PSPHT = null;
 
         // Initialize the saturating counter
-        SC = null;
+        zeros = new Bit[SCSize];
+        for (int i = 0; i < SCSize; i++) {
+            zeros[i] = Bit.ZERO;
+        }
+        this.PABHR = new RegisterBank(branchInstructionSize, BHRSize);
+        // Initialize the PHT with a size of 2^size and each entry having a saturating counter of size "SCSize"
+        this.PSPHT = new PageHistoryTable(((int)Math.pow(2.0,(double)BHRSize+branchInstructionSize)),SCSize);
+        // Initialize the SC register
+        SC = new SIPORegister("SC",SCSize,null);
     }
 
     /**
@@ -45,13 +53,30 @@ public class PAs implements BranchPredictor {
      */
     @Override
     public BranchResult predict(BranchInstruction branchInstruction) {
-        // TODO: complete Task 1
+        ShiftRegister BHR = PABHR.read(branchInstruction.getInstructionAddress());
+        getCacheEntry(branchInstruction.getInstructionAddress(),BHR.read());
+        PSPHT.putIfAbsent(getCacheEntry(branchInstruction.getInstructionAddress(),BHR.read()),zeros);
+        SC.load(PSPHT.get(getCacheEntry(branchInstruction.getInstructionAddress(),BHR.read())));
+        if(Bit.toNumber(SC.read())>=2){
+            return BranchResult.TAKEN;
+        }
         return BranchResult.NOT_TAKEN;
     }
 
     @Override
     public void update(BranchInstruction instruction, BranchResult actual) {
         // TODO:complete Task 2
+        ShiftRegister BHR = PABHR.read(instruction.getInstructionAddress());
+        SC.load(PSPHT.get(  getCacheEntry(instruction.getInstructionAddress(),BHR.read())));
+        if(BranchResult.isTaken(actual)){
+            PSPHT.put( getCacheEntry(instruction.getInstructionAddress(),BHR.read()),CombinationalLogic.count(SC.read(),true,CountMode.SATURATING));
+            BHR.insert(Bit.ONE);
+
+        }else {
+            PSPHT.put( getCacheEntry(instruction.getInstructionAddress(),BHR.read()),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
+            BHR.insert(Bit.ZERO);
+        }
+        PABHR.write(instruction.getInstructionAddress(), BHR.read());
     }
 
     @Override
