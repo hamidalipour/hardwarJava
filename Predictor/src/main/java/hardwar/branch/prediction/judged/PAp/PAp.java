@@ -66,6 +66,8 @@ public class PAp implements BranchPredictor {
             PAPHT.put(getCacheEntry(instruction.getInstructionAddress(), BHR.read()),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
             BHR.insert(Bit.ZERO);
         }
+        PABHR.write(instruction.getInstructionAddress(), BHR.read());
+
     }
 
 
