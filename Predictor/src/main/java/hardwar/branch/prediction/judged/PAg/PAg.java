@@ -9,6 +9,7 @@ public class PAg implements BranchPredictor {
     private final ShiftRegister SC; // saturating counter register
     private final RegisterBank PABHR; // per address branch history register
     private final Cache<Bit[], Bit[]> PHT; // page history table
+    private final Bit[] zeros;
 
     public PAg() {
         this(4, 2, 8);
@@ -25,6 +26,10 @@ public class PAg implements BranchPredictor {
     public PAg(int BHRSize, int SCSize, int branchInstructionSize) {
         // TODO : complete the constructor
         // Initialize the BHR register with the given size and no default value
+        zeros = new Bit[SCSize];
+        for (int i = 0; i < SCSize; i++) {
+            zeros[i] = Bit.ZERO;
+        }
         this.PABHR = new RegisterBank(branchInstructionSize, BHRSize);
 
         // Initialize the PHT with a size of 2^size and each entry having a saturating counter of size "SCSize"
@@ -41,6 +46,7 @@ public class PAg implements BranchPredictor {
     public BranchResult predict(BranchInstruction instruction) {
         // TODO : complete Task 1
         ShiftRegister BHR = PABHR.read(instruction.getInstructionAddress());
+        PHT.putIfAbsent(BHR.read(),zeros);
         SC.load(PHT.get(BHR.read()));
         if(Bit.toNumber(SC.read())>=2){
             return BranchResult.TAKEN;
