@@ -47,7 +47,7 @@ public class PAp implements BranchPredictor {
     public BranchResult predict(BranchInstruction branchInstruction) {
         ShiftRegister BHR = PABHR.read(branchInstruction.getInstructionAddress());
         PAPHT.putIfAbsent(getCacheEntry(branchInstruction.getInstructionAddress()),zeros);
-        SC.load(PAPHT.get(getCacheEntry(branchInstruction.getInstructionAddress())))\;
+        SC.load(PAPHT.get(getCacheEntry(branchInstruction.getInstructionAddress())));
         if(Bit.toNumber(SC.read()) > (int) Math.pow(2.0 , SC.getLength() - 1) - 1){
             return BranchResult.TAKEN;
         }
