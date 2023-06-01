@@ -55,8 +55,8 @@ public class GAp implements BranchPredictor {
     public BranchResult predict(BranchInstruction branchInstruction) {
 
 
-        PAPHT.putIfAbsent(getCacheEntry(branchInstruction.getInstructionAddress());,zeros);
-        SC.load(PAPHT.get(getCacheEntry(branchInstruction.getInstructionAddress());));
+        PAPHT.putIfAbsent(getCacheEntry(branchInstruction.getInstructionAddress()),zeros);
+        SC.load(PAPHT.get(getCacheEntry(branchInstruction.getInstructionAddress())));
         if(Bit.toNumber(SC.read()) > (int) Math.pow(2.0 , SC.getLength() - 1) - 1){
             return BranchResult.TAKEN;
         }
