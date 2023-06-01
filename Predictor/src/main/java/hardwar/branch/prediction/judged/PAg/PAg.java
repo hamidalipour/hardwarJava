@@ -30,8 +30,7 @@ public class PAg implements BranchPredictor {
         for (int i = 0; i < SCSize; i++) {
             zeros[i] = Bit.ZERO;
         }
-        this.PABHR = new RegisterBank((int)Math.pow(2.0,(double)BHRSize), BHRSize);
-
+        this.PABHR = new RegisterBank((int)Math.pow(2.0,(double)branchInstructionSize), BHRSize);
         // Initialize the PHT with a size of 2^size and each entry having a saturating counter of size "SCSize"
         this.PHT = new PageHistoryTable(((int)Math.pow(2.0,(double)BHRSize)),SCSize);
         // Initialize the SC register
@@ -45,6 +44,10 @@ public class PAg implements BranchPredictor {
     @Override
     public BranchResult predict(BranchInstruction instruction) {
         // TODO : complete Task 1
+    //    if (PABHR.read(instruction.getInstructionAddress()) == null) {
+      //      PABHR.read(instruction.getInstructionAddress()) = ;
+       // }
+
         ShiftRegister BHR = PABHR.read(instruction.getInstructionAddress());
         PHT.putIfAbsent(BHR.read(),zeros);
         SC.load(PHT.get(BHR.read()));
