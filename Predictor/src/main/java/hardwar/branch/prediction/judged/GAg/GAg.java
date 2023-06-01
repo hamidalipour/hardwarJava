@@ -10,6 +10,7 @@ public class GAg implements BranchPredictor {
     private final ShiftRegister BHR; // branch history register
     private final Cache<Bit[], Bit[]> PHT; // page history table
     private final ShiftRegister SC; // saturated counter register
+    private final Bit[] zeros;
 
     public GAg() {
         this(4, 2);
@@ -24,12 +25,17 @@ public class GAg implements BranchPredictor {
     public GAg(int BHRSize, int SCSize) {
         // TODO : complete the constructor
         // Initialize the BHR register with the given size and no default value
+        zeros = new Bit[SCSize];
+        for (int i = 0; i < SCSize; i++) {
+            zeros[i] = Bit.ZERO;
+        }
         this.BHR = new SIPORegister("BHR",BHRSize,null);
 
         // Initialize the PHT with a size of 2^size and each entry having a saturating counter of size "SCSize"
         this.PHT = new PageHistoryTable(((int)Math.pow(2.0,(double)BHRSize)),SCSize);
         // Initialize the SC register
         SC = new SIPORegister("SC",SCSize,null);
+
     }
 
     /**
@@ -41,6 +47,7 @@ public class GAg implements BranchPredictor {
     @Override
     public BranchResult predict(BranchInstruction branchInstruction) {
         // TODO : complete Task 1
+        PHT.putIfAbsent(BHR.read(),zeros);
         SC.load(PHT.get(BHR.read()));
         if(Bit.toNumber(SC.read())>=2){
             return BranchResult.TAKEN;
@@ -57,6 +64,7 @@ public class GAg implements BranchPredictor {
     @Override
     public void update(BranchInstruction instruction, BranchResult actual) {
         // TODO: complete Task 2
+        
         SC.load(PHT.get(BHR.read()));
         if(BranchResult.isTaken(actual)){
             PHT.put(BHR.read(),CombinationalLogic.count(SC.read(),true,CountMode.SATURATING));
