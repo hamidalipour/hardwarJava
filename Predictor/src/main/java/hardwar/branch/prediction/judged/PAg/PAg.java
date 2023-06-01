@@ -78,7 +78,7 @@ public class PAg implements BranchPredictor {
     private Bit[] getDefaultBlock() {
         Bit[] defaultBlock = new Bit[SC.getLength()];
         Arrays.fill(defaultBlock, Bit.ZERO);
-        return defaultBlock;;
+        return defaultBlock;
     }
 
     @Override
