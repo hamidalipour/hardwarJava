@@ -73,6 +73,7 @@ public class PAg implements BranchPredictor {
             PHT.put(BHR.read(),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
             BHR.insert(Bit.ZERO);
         }
+        PABHR.write(instruction.getInstructionAddress(), BHR.read());
     }
 
     /**
