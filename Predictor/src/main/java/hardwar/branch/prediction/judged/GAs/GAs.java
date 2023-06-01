@@ -14,6 +14,7 @@ public class GAs implements BranchPredictor {
     private final ShiftRegister SC; // saturating counter register
     private final ShiftRegister BHR; // branch history register
     private final Cache<Bit[], Bit[]> PSPHT; // Per Set Predication History Table
+    private final Bit[] zeros;
 
     public GAs() {
         this(4, 2, 8, 4, HashMode.XOR);
@@ -30,18 +31,35 @@ public class GAs implements BranchPredictor {
     public GAs(int BHRSize, int SCSize, int branchInstructionSize, int KSize, HashMode hashmode) {
         // TODO: complete the constructor
         this.branchInstructionSize = 0;
-        this.KSize = 0;
+        this.KSize = KSize;
         this.hashMode = HashMode.XOR;
 
         // Initialize the BHR register with the given size and no default value
-        BHR = null;
 
         // Initializing the PAPHT with K bit as PHT selector and 2^BHRSize row as each PHT entries
         // number and SCSize as block size
-        PSPHT = null;
+        
 
         // Initialize the saturating counter
-        SC = null;
+
+
+
+
+        // TODO: complete the constructor
+        zeros = new Bit[SCSize];
+        for (int i = 0; i < SCSize; i++) {
+            zeros[i] = Bit.ZERO;
+        }
+
+        // Initialize the BHR register with the given size and no default value
+        this.BHR =  new SIPORegister("BHR",BHRSize,null);
+
+        // Initializing the PAPHT with BranchInstructionSize as PHT Selector and 2^BHRSize row as each PHT entries
+        // number and SCSize as block size
+        PSPHT = new PageHistoryTable(((int)Math.pow(2.0,(double)(BHRSize+KSize))),SCSize);
+
+        // Initialize the SC register
+        SC = new SIPORegister("SC",SCSize,null);
     }
 
     /**
@@ -54,6 +72,11 @@ public class GAs implements BranchPredictor {
     @Override
     public BranchResult predict(BranchInstruction branchInstruction) {
         // TODO: complete Task 1
+        PSPHT.putIfAbsent(getCacheEntry(branchInstruction.getInstructionAddress()),zeros);
+        SC.load(PSPHT.get(getCacheEntry(branchInstruction.getInstructionAddress())));
+        if(Bit.toNumber(SC.read()) > (int) Math.pow(2.0 , SC.getLength() - 1) - 1){
+            return BranchResult.TAKEN;
+        }
         return BranchResult.NOT_TAKEN;
     }
 
@@ -66,6 +89,15 @@ public class GAs implements BranchPredictor {
     @Override
     public void update(BranchInstruction branchInstruction, BranchResult actual) {
         // TODO: complete Task 2
+        SC.load(PSPHT.get(getCacheEntry(branchInstruction.getInstructionAddress())));
+        if(BranchResult.isTaken(actual)){
+            PSPHT.put(getCacheEntry(branchInstruction.getInstructionAddress()),CombinationalLogic.count(SC.read(),true,CountMode.SATURATING));
+            BHR.insert(Bit.ONE);
+
+        }else {
+            PSPHT.put(getCacheEntry(branchInstruction.getInstructionAddress()),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
+            BHR.insert(Bit.ZERO);
+        }
     }
 
     /**
