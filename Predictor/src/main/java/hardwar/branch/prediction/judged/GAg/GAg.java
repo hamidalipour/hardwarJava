@@ -31,9 +31,9 @@ public class GAg implements BranchPredictor {
         this.BHR = new SIPORegister("BHR",BHRSize,aaa);
 
         // Initialize the PHT with a size of 2^size and each entry having a saturating counter of size "SCSize"
-        this.PHT = new PageHistoryTable((int)pow(2,BHRSize),2);
+        this.PHT = new PageHistoryTable(((int)Math.pow(2.0,(double)BHRSize)),2);
         // Initialize the SC register
-        SC = new SIPORegister("SC",2,aaa);
+        SC = new SIPORegister("SC",SCSize,aaa);
     }
 
     /**
@@ -65,12 +65,12 @@ public class GAg implements BranchPredictor {
         if(BranchResult.isTaken(actual)){
             PHT.put(BHR.read(),CombinationalLogic.count(SC.read(),true,CountMode.SATURATING));
             BHR.insert(Bit.ONE);
-            
+
         }else {
             PHT.put(BHR.read(),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
             BHR.insert(Bit.ZERO);
         }
-        
+
     }
 
 
