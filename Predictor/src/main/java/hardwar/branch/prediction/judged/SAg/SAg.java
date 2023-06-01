@@ -12,6 +12,8 @@ public class SAg implements BranchPredictor {
     private final ShiftRegister SC; // saturating counter register
     private final RegisterBank PSBHR; // per set branch history register
     private final Cache<Bit[], Bit[]> PHT; // page history table
+    private final Bit[] zeros;
+    private final HashMode hashMode;
 
     public SAg() {
         this(4, 2, 8, 4);
@@ -20,27 +22,55 @@ public class SAg implements BranchPredictor {
     public SAg(int BHRSize, int SCSize, int branchInstructionSize, int KSize) {
         // TODO: complete the constructor
         this.branchInstructionSize = 0;
-        this.KSize = 0;
+        this.KSize = KSize;
+        this.hashMode = HashMode.XOR;
 
         // Initialize the PABHR with the given bhr and Ksize
-        PSBHR = null;
+
 
         // Initialize the PHT with a size of 2^size and each entry having a saturating counter of size "SCSize"
-        PHT = null;
 
         // Initialize the SC register
-        SC = null;
+
+        // TODO : complete the constructor
+        // Initialize the BHR register with the given size and no default value
+        zeros = new Bit[SCSize];
+        for (int i = 0; i < SCSize; i++) {
+            zeros[i] = Bit.ZERO;
+        }
+        this.PSBHR = new RegisterBank(branchInstructionSize, BHRSize);
+        // Initialize the PHT with a size of 2^size and each entry having a saturating counter of size "SCSize"
+        this.PHT = new PageHistoryTable(((int)Math.pow(2.0,(double)BHRSize)),SCSize);
+        // Initialize the SC register
+        SC = new SIPORegister("SC",SCSize,null);
     }
 
     @Override
     public BranchResult predict(BranchInstruction instruction) {
         // TODO: complete Task 1
+        ShiftRegister BHR = PSBHR.read(instruction.getInstructionAddress());
+        PHT.putIfAbsent(BHR.read(),zeros);
+        SC.load(PHT.get(BHR.read()));
+        if(Bit.toNumber(SC.read())>=2){
+            return BranchResult.TAKEN;
+        }
         return BranchResult.NOT_TAKEN;
     }
 
     @Override
     public void update(BranchInstruction branchInstruction, BranchResult actual) {
         // TODO: complete Task 2
+        ShiftRegister BHR = PSBHR.read(hash(branchInstruction.getInstructionAddress()));
+        SC.load(PHT.get(BHR.read()));
+        if(BranchResult.isTaken(actual)){
+            PHT.put(BHR.read(),CombinationalLogic.count(SC.read(),true,CountMode.SATURATING));
+            BHR.insert(Bit.ONE);
+
+        }else {
+            PHT.put(BHR.read(),CombinationalLogic.count(SC.read(),false,CountMode.SATURATING));
+            BHR.insert(Bit.ZERO);
+        }
+        PSBHR.write(hash(branchInstruction.getInstructionAddress()), BHR.read());
     }
 
     private Bit[] getRBAddressLine(Bit[] branchAddress) {
